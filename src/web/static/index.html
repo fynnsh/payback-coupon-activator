@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payback Coupon Activator</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0a0a0a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+  }
+
+  .container { max-width: 640px; width: 100%; }
+
+  /* Header */
+  header { text-align: center; margin-bottom: 40px; }
+  header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #c8a96e;
+    margin-bottom: 4px;
+  }
+  header p {
+    font-size: 22px;
+    font-weight: 300;
+    color: #999;
+    letter-spacing: 1px;
+  }
+
+  /* Drop Zone */
+  .drop-zone {
+    border: 1px dashed #333;
+    border-radius: 2px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: #141414;
+    margin-bottom: 32px;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #c8a96e;
+    background: rgba(200, 169, 110, 0.04);
+  }
+  .drop-zone svg { margin-bottom: 16px; opacity: 0.4; transition: opacity 0.2s; }
+  .drop-zone:hover svg, .drop-zone.dragover svg { opacity: 0.7; }
+  .drop-zone-text { font-size: 14px; color: #666; line-height: 1.6; }
+  .drop-zone-text strong { color: #c8a96e; font-weight: 500; }
+  .drop-zone input { display: none; }
+
+  /* Upload feedback */
+  .upload-msg {
+    text-align: center;
+    font-size: 13px;
+    margin-top: -24px;
+    margin-bottom: 24px;
+    min-height: 20px;
+  }
+  .upload-msg.ok { color: #c8a96e; }
+  .upload-msg.err { color: #e05555; }
+
+  /* Status Panel */
+  .status-panel { display: none; }
+  .status-panel.visible { display: block; }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .card {
+    background: #141414;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 2px;
+    padding: 20px;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: rgba(255,255,255,0.12); }
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  .card-value {
+    font-size: 24px;
+    font-weight: 300;
+    color: #e0e0e0;
+    line-height: 1.2;
+  }
+  .card-detail {
+    font-size: 11px;
+    color: #555;
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* Indicator dot */
+  .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .dot.green { background: #4a9; }
+  .dot.red { background: #e05555; }
+  .dot.grey { background: #444; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: none;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    padding: 14px 20px;
+    background: #141414;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 2px;
+  }
+  .stats-bar.visible { display: flex; }
+  .stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #999;
+    letter-spacing: 0.5px;
+  }
+  .stat-chip .num {
+    font-size: 18px;
+    font-weight: 300;
+    color: #e0e0e0;
+  }
+  .stat-chip .num.gold { color: #c8a96e; }
+  .stat-chip .num.red { color: #e05555; }
+  .stat-chip .sep {
+    color: #333;
+    margin: 0 4px;
+    font-size: 16px;
+  }
+
+  /* Trigger button */
+  .trigger-wrap { margin-top: 16px; text-align: center; }
+  .trigger-btn {
+    background: transparent;
+    border: 1px solid #c8a96e;
+    color: #c8a96e;
+    padding: 10px 32px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .trigger-btn:hover { background: #c8a96e; color: #0a0a0a; }
+  .trigger-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .trigger-btn:disabled:hover { background: transparent; color: #c8a96e; }
+
+  /* Footer */
+  footer {
+    margin-top: 48px;
+    text-align: center;
+    font-size: 11px;
+    color: #333;
+    letter-spacing: 1px;
+  }
+
+  /* Fade-in animation for status updates */
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+  .updating { animation: pulse 0.4s ease; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Payback</h1>
+    <p>Coupon Activator</p>
+  </header>
+
+  <div class="drop-zone" id="dropZone">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c8a96e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <div class="drop-zone-text">
+      <strong>cookies.json</strong> hierher ziehen<br>oder klicken zum Auswählen
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json">
+  </div>
+
+  <div class="upload-msg" id="uploadMsg"></div>
+
+  <section class="status-panel" id="statusPanel">
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-chip">
+        <span class="num gold" id="statActivated">–</span>
+        <span class="sep">/</span>
+        <span class="num" id="statTotal">–</span>
+        <span>Coupons</span>
+      </div>
+      <div class="stat-chip">
+        <span class="dot grey" id="statSessionDot"></span>
+        <span id="statSessionText">Session unbekannt</span>
+      </div>
+    </div>
+    <div class="status-grid">
+      <div class="card">
+        <div class="card-label">Cookies</div>
+        <div class="card-value" id="cookieCount">&ndash;</div>
+        <div class="card-detail" id="cookieDetail"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Letzte Aktivierung</div>
+        <div class="card-value" id="lastResult">&ndash;</div>
+        <div class="card-detail" id="lastTime"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">N&auml;chster Lauf</div>
+        <div class="card-value" id="nextRun">&ndash;</div>
+        <div class="card-detail" id="nextRunDetail"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Session</div>
+        <div class="card-value" id="sessionStatus"><span class="dot grey"></span>–</div>
+        <div class="card-detail" id="sessionDetail"></div>
+      </div>
+    </div>
+
+    <div class="trigger-wrap">
+      <button class="trigger-btn" id="triggerBtn">Jetzt aktivieren</button>
+    </div>
+  </section>
+
+  <footer>Payback Coupon Activator &middot; Auto-Refresh alle 30s</footer>
+</div>
+
+<script>
+(function() {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadMsg = document.getElementById('uploadMsg');
+  const statusPanel = document.getElementById('statusPanel');
+  const triggerBtn = document.getElementById('triggerBtn');
+
+  // Helper: set session status with colored dot (safe DOM manipulation, no innerHTML)
+  function setSessionStatus(color, text) {
+    const el = document.getElementById('sessionStatus');
+    el.textContent = '';
+    const dot = document.createElement('span');
+    dot.className = 'dot ' + color;
+    el.appendChild(dot);
+    el.appendChild(document.createTextNode(text));
+  }
+
+  // Drag & Drop
+  ['dragenter', 'dragover'].forEach(function(e) {
+    dropZone.addEventListener(e, function(ev) { ev.preventDefault(); dropZone.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function(e) {
+    dropZone.addEventListener(e, function(ev) { ev.preventDefault(); dropZone.classList.remove('dragover'); });
+  });
+  dropZone.addEventListener('click', function() { fileInput.click(); });
+  dropZone.addEventListener('drop', function(ev) { if (ev.dataTransfer.files.length) uploadFile(ev.dataTransfer.files[0]); });
+  fileInput.addEventListener('change', function() { if (fileInput.files.length) uploadFile(fileInput.files[0]); });
+
+  async function uploadFile(file) {
+    uploadMsg.textContent = 'Hochladen\u2026';
+    uploadMsg.className = 'upload-msg';
+    try {
+      var form = new FormData();
+      form.append('file', file);
+      var res = await fetch('/api/cookies', { method: 'POST', body: form });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Upload fehlgeschlagen');
+      uploadMsg.textContent = data.cookie_count + ' Cookies geladen';
+      uploadMsg.className = 'upload-msg ok';
+      fetchStatus();
+    } catch (e) {
+      uploadMsg.textContent = e.message;
+      uploadMsg.className = 'upload-msg err';
+    }
+  }
+
+  // Trigger manual activation
+  triggerBtn.addEventListener('click', async function() {
+    triggerBtn.disabled = true;
+    try {
+      var res = await fetch('/api/trigger', { method: 'POST' });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Fehler');
+      triggerBtn.textContent = 'L\u00e4uft\u2026';
+      setTimeout(function() { fetchStatus(); }, 3000);
+    } catch (e) {
+      triggerBtn.disabled = false;
+      triggerBtn.textContent = 'Jetzt aktivieren';
+      uploadMsg.textContent = e.message;
+      uploadMsg.className = 'upload-msg err';
+    }
+  });
+
+  // Status polling
+  async function fetchStatus() {
+    try {
+      var res = await fetch('/api/status');
+      if (!res.ok) return;
+      var s = await res.json();
+      renderStatus(s);
+    } catch (e) { /* silent */ }
+  }
+
+  function renderStatus(s) {
+    if (s.cookie_count > 0) {
+      statusPanel.classList.add('visible');
+    }
+
+    // Stats bar
+    var statsBar = document.getElementById('statsBar');
+    if (s.last_activation_result || s.last_keepalive_time) {
+      statsBar.classList.add('visible');
+    }
+    if (s.last_activation_result) {
+      var r = s.last_activation_result;
+      document.getElementById('statActivated').textContent = r.activated;
+      document.getElementById('statTotal').textContent = r.total_found;
+      var activatedEl = document.getElementById('statActivated');
+      activatedEl.className = 'num ' + (r.failed > 0 ? 'red' : 'gold');
+    }
+    var statDot = document.getElementById('statSessionDot');
+    var statText = document.getElementById('statSessionText');
+    if (s.last_keepalive_ok) {
+      statDot.className = 'dot green';
+      statText.textContent = 'Session OK';
+    } else if (s.last_keepalive_time) {
+      statDot.className = 'dot red';
+      statText.textContent = 'Session Fehler';
+    } else {
+      statDot.className = 'dot grey';
+      statText.textContent = 'Session unbekannt';
+    }
+
+    // Cookies card
+    document.getElementById('cookieCount').textContent = s.cookie_count;
+    var detail = s.cookie_domains.join(', ');
+    if (s.cookies_expired) detail += ' \u00b7 abgelaufen!';
+    document.getElementById('cookieDetail').textContent = detail;
+
+    // Last activation card
+    if (s.last_activation_result) {
+      document.getElementById('lastResult').textContent = s.last_activation_result.activated + ' aktiviert';
+      document.getElementById('lastTime').textContent = relTime(s.last_activation_time);
+    } else {
+      document.getElementById('lastResult').textContent = '\u2013';
+      document.getElementById('lastTime').textContent = 'Noch keine Aktivierung';
+    }
+
+    // Next run card
+    if (s.next_scheduled_run) {
+      var next = new Date(s.next_scheduled_run);
+      var diff = next - Date.now();
+      if (diff > 0) {
+        var h = Math.floor(diff / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        document.getElementById('nextRun').textContent = h + 'h ' + m + 'm';
+        document.getElementById('nextRunDetail').textContent = next.toLocaleString('de-DE');
+      } else {
+        document.getElementById('nextRun').textContent = 'Jetzt';
+        document.getElementById('nextRunDetail').textContent = '';
+      }
+    }
+
+    // Session card (safe DOM manipulation)
+    if (s.last_keepalive_ok) {
+      setSessionStatus('green', 'Aktiv');
+      document.getElementById('sessionDetail').textContent = relTime(s.last_keepalive_time);
+    } else if (s.last_keepalive_time) {
+      setSessionStatus('red', 'Fehler');
+      document.getElementById('sessionDetail').textContent = relTime(s.last_keepalive_time);
+    } else {
+      setSessionStatus('grey', 'Unbekannt');
+      document.getElementById('sessionDetail').textContent = 'Warte auf Keepalive\u2026';
+    }
+
+    // Trigger button state
+    triggerBtn.disabled = s.is_running;
+    triggerBtn.textContent = s.is_running ? 'L\u00e4uft\u2026' : 'Jetzt aktivieren';
+  }
+
+  function relTime(iso) {
+    if (!iso) return '';
+    var diff = Date.now() - new Date(iso).getTime();
+    if (diff < 60000) return 'Gerade eben';
+    if (diff < 3600000) return 'Vor ' + Math.floor(diff / 60000) + ' Min';
+    if (diff < 86400000) return 'Vor ' + Math.floor(diff / 3600000) + ' Std';
+    return 'Vor ' + Math.floor(diff / 86400000) + ' Tagen';
+  }
+
+  // Initial fetch + polling
+  fetchStatus();
+  setInterval(fetchStatus, 30000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+services:
+  payback-activator:
+    build: .
+    container_name: payback-activator
+    env_file: .env
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+    shm_size: 1gb
