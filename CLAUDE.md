@@ -89,4 +89,3 @@ Keine Datenbank, keine Message-Queue, keine externen APIs ausser Payback.
 
 - Globale Regeln: `~/.claude/CLAUDE.md`
 - Workspace-Infra: `/Users/wfy/Documents/private/.claude/CLAUDE.md`
-- Backup vorherige README: `README.backup.md`
